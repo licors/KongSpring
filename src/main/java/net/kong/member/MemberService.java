@@ -1,54 +1,63 @@
 package net.kong.member;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+
+
 import java.util.List;
-import java.util.Map;
 
-public class MemberService {
+import javax.annotation.Resource;
 
-	private int nextMemberId = 0;
-	private Map<String, MemberInfo> memberMap = new HashMap<String, MemberInfo>();
+import org.mybatis.spring.SqlSessionTemplate;
+import org.springframework.stereotype.Service;
 
-	public MemberService() {
-		memberMap.put("m1", new MemberInfo("m1", "이상화", "sanghwa@sanghwa.com", "sanghwa", false, new Address()));
-		memberMap.put("m2", new MemberInfo("m2", "김연아", "yuna@yuna.com", "yuna", false, new Address()));
-		nextMemberId = 3;
+
+
+@Service
+public class MemberService implements MemberDao{
+
+	@Resource(name="sqlSessionTemplate")
+	private SqlSessionTemplate sqlSessionTemplate;
+	
+	@Override
+    public MemberModel memberLogin(MemberModel mem) {
+	    return sqlSessionTemplate.selectOne("member.login", mem);
+    }
+
+	@Override
+	public MemberModel getMember(String id) {
+		return sqlSessionTemplate.selectOne("member.getMember", id);
 	}
 
-	public MemberInfo getMemberInfo(String memberId) {
-		return memberMap.get(memberId);
+	@Override
+	public Object insertMember(MemberModel mem) {
+		return sqlSessionTemplate.insert("member.insertMember", mem);
 	}
-  
-	/*public void modifyMemberInfo(MemberModRequest modReq) {
-		MemberInfo mi = memberMap.get(modReq.getId());
-		if (mi == null)
-			throw new MemberNotFoundException();
-		if (!mi.matchPassword(modReq.getCurrentPassword()))
-			throw new NotMatchPasswordException();
-
-		mi.setEmail(modReq.getEmail());
-		mi.setName(modReq.getName());
-		mi.setAllowNoti(modReq.isAllowNoti());
-		mi.setAddress(modReq.getAddress());
-	}*/
-
-	public List<MemberInfo> getMembers() {
-		return new ArrayList<MemberInfo>(memberMap.values());
+	
+	@Override
+	public MemberModel idFindByName(MemberModel member) {
+		return sqlSessionTemplate.selectOne("member.idfind", member);
+    }
+	
+	@Override
+	public MemberModel pwFindById(MemberModel member) {
+		return sqlSessionTemplate.selectOne("member.pwfind", member);
+    }
+    
+	@Override
+	public Object memberModify(MemberModel member) {
+		return sqlSessionTemplate.update("member.updateMember", member);
+	}
+	
+	@Override
+	public Object memberDelete(String id) {
+		return sqlSessionTemplate.delete("member.deleteMember", id);
+    }
+	
+	@Override
+	public List<ZipcodeModel> zipcodeCheck(ZipcodeModel zipcodeModel) throws Exception {
+		// TODO Auto-generated method stub
+		return sqlSessionTemplate.selectList("member.zipcodeCheck", zipcodeModel);
 	}
 
-	/*public void registNewMember(MemberRegistRequest memRegReq) {
-		MemberInfo mi = new MemberInfo("m" + nextMemberId,
-				memRegReq.getName(), memRegReq.getEmail(), memRegReq.getPassword(),
-				memRegReq.isAllowNoti(), memRegReq.getAddress());
-		memberMap.put(mi.getId(), mi);
-	}*/
-
-	public MemberInfo getMemberInfoByEmail(String email) {
-		for (MemberInfo mi : memberMap.values()) {
-			if (mi.getEmail().equals(email))
-				return mi;
-		}
-		return null;
-	}
+	
+	
 }
